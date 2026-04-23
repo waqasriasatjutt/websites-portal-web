@@ -23,35 +23,21 @@ export default async function HomePage() {
   const h = await headers();
   const host = (h.get('x-forwarded-host') || h.get('host') || '').split(':')[0].toLowerCase();
 
-  let data: Awaited<ReturnType<typeof getPage>> = null;
-  let debugError: string | null = null;
-  try {
-    data = await getPage(host, { home: true });
-  } catch (err: any) {
-    debugError = `Fetch error for host=${host}: ${err?.message || String(err)}`;
-  }
-
+  const data = await getPage(host, { home: true });
   if (!data) {
     return (
       <div className="wp-container py-20">
         <h1 className="text-3xl font-bold">Site not found</h1>
-        <p className="mt-4">No website for host <code>{host}</code>.</p>
-        {debugError && <pre className="mt-4 text-xs">{debugError}</pre>}
+        <p className="mt-4">No website configured for host <code>{host}</code>. Create it in Odoo → Websites Portal → Sites.</p>
       </div>
     );
   }
-
-  // Bisect test: chrome only, no BlockRenderer
   const { site, page } = data;
   return (
     <div style={themeStyle(site.theme)}>
       <SiteHeader site={site} />
       <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
-        <div className="wp-container py-20">
-          <h1 className="text-3xl font-bold">Bisect: chrome on, blocks off</h1>
-          <p>Blocks loaded: {page.blocks.length}</p>
-          <BlockRenderer blocks={page.blocks.slice(0, 1)} />
-        </div>
+        <BlockRenderer blocks={page.blocks} />
       </main>
       <SiteFooter site={site} />
     </div>
