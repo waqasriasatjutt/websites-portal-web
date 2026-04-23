@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { getPage } from '@/lib/odoo';
+import { getPage, getPosts } from '@/lib/odoo';
 import BlockRenderer from '@/components/BlockRenderer';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 
@@ -33,11 +33,27 @@ export default async function HomePage() {
     );
   }
   const { site, page } = data;
+
+  // Auto-inject latest posts into any post_list block(s) on the page.
+  // Editors leave `props.posts` empty in Odoo; we populate it at render time
+  // so the block always shows fresh content without the editor maintaining it.
+  const needsPosts = page.blocks.some(b => b.type === 'post_list');
+  let latestPosts: any[] = [];
+  if (needsPosts) {
+    const r = await getPosts(host, { limit: 6 });
+    latestPosts = r?.posts || [];
+  }
+  const hydratedBlocks = page.blocks.map(b =>
+    b.type === 'post_list'
+      ? { ...b, props: { ...(b.props || {}), posts: latestPosts } }
+      : b
+  );
+
   return (
     <div style={themeStyle(site.theme)}>
       <SiteHeader site={site} />
       <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
-        <BlockRenderer blocks={page.blocks} />
+        <BlockRenderer blocks={hydratedBlocks} />
       </main>
       <SiteFooter site={site} />
     </div>
