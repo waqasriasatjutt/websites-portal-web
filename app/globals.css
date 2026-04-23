@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #00d4ff;
+  --accent: #9eff00;
+  --bg: #0a0e27;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --radius: 0.5rem;
+}
+
+html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); }
+h1, h2, h3, h4, h5 { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+.wp-grad-text { background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.wp-container { max-width: 80rem; margin: 0 auto; padding: 0 1.5rem; }
+.wp-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.25rem; border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; transition: all .15s; }
+.wp-btn-primary { background: var(--primary); color: var(--bg); }
+.wp-btn-primary:hover { opacity: 0.9; }
+.wp-btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: var(--text); }
