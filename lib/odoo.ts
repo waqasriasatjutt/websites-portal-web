@@ -33,6 +33,15 @@ export interface SiteConfig {
   favicon_url: string;
   menu: Array<{ label: string; href: string }>;
   theme: Theme;
+  seo?: {
+    focus_keyword: string;
+    secondary_keywords: string;
+    niche: string;
+    schema_type: string;
+    phone: string;
+    whatsapp: string;
+  };
+  tokens?: Record<string, string | number>;
 }
 
 export interface Block {

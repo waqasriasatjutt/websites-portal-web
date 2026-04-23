@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
 import { getPage, getPosts } from '@/lib/odoo';
+import { substituteDeep, substituteString } from '@/lib/tokens';
 import BlockRenderer from '@/components/BlockRenderer';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 
@@ -33,6 +34,7 @@ export default async function HomePage() {
     );
   }
   const { site, page } = data;
+  const tokens = { ...(site.tokens || {}) };
 
   // Auto-inject latest posts into any post_list block(s) on the page.
   // Editors leave `props.posts` empty in Odoo; we populate it at render time
@@ -43,19 +45,33 @@ export default async function HomePage() {
     const r = await getPosts(host, { limit: 6 });
     latestPosts = r?.posts || [];
   }
-  const hydratedBlocks = page.blocks.map(b =>
-    b.type === 'post_list'
+  const hydratedBlocks = page.blocks.map(b => {
+    const withPosts = b.type === 'post_list'
       ? { ...b, props: { ...(b.props || {}), posts: latestPosts } }
-      : b
-  );
+      : b;
+    // Token substitution — replaces {{key}} inside any string prop,
+    // deeply (so items[].title, tiers[].features[] etc. are covered).
+    return { ...withPosts, props: substituteDeep(withPosts.props || {}, tokens) };
+  });
+
+  // Also substitute tokens in menu labels
+  const siteWithTokens = {
+    ...site,
+    title: substituteString(site.title || '', tokens as any) || site.title,
+    tagline: substituteString(site.tagline || '', tokens as any),
+    menu: (site.menu || []).map(m => ({
+      label: substituteString(m.label, tokens as any),
+      href: substituteString(m.href, tokens as any),
+    })),
+  };
 
   return (
     <div style={themeStyle(site.theme)}>
-      <SiteHeader site={site} />
+      <SiteHeader site={siteWithTokens} />
       <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
         <BlockRenderer blocks={hydratedBlocks} />
       </main>
-      <SiteFooter site={site} />
+      <SiteFooter site={siteWithTokens} />
     </div>
   );
 }
