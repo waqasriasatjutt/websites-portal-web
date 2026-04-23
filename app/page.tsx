@@ -50,7 +50,7 @@ export default async function HomePage() {
         <div className="wp-container py-20">
           <h1 className="text-3xl font-bold">Bisect: chrome on, blocks off</h1>
           <p>Blocks loaded: {page.blocks.length}</p>
-          <BlockRenderer blocks={[]} />
+          <BlockRenderer blocks={page.blocks.slice(0, 1)} />
         </div>
       </main>
       <SiteFooter site={site} />
