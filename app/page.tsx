@@ -1,5 +1,7 @@
 import { headers } from 'next/headers';
 import { getPage } from '@/lib/odoo';
+import BlockRenderer from '@/components/BlockRenderer';
+import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 
 export const runtime = 'edge';
 export const revalidate = 300;
@@ -39,18 +41,19 @@ export default async function HomePage() {
     );
   }
 
-  // DEBUG: minimal render — prove the fetch data structure is valid.
-  // If THIS renders, the problem is in BlockRenderer / SiteChrome / themeStyle.
-  // If THIS still 500s, the problem is in how the returned data is shaped.
+  // Bisect test: chrome only, no BlockRenderer
   const { site, page } = data;
   return (
-    <div className="wp-container py-20" style={themeStyle(site.theme)}>
-      <h1 className="text-3xl font-bold">{site.title}</h1>
-      <p style={{ color: 'var(--muted)' }}>{site.tagline}</p>
-      <p className="mt-6">Blocks loaded: {page.blocks.length}</p>
-      <ul className="mt-3 list-disc pl-6">
-        {page.blocks.map(b => <li key={b.id}>{b.type} ({Object.keys(b.props || {}).length} props)</li>)}
-      </ul>
+    <div style={themeStyle(site.theme)}>
+      <SiteHeader site={site} />
+      <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
+        <div className="wp-container py-20">
+          <h1 className="text-3xl font-bold">Bisect: chrome on, blocks off</h1>
+          <p>Blocks loaded: {page.blocks.length}</p>
+          <BlockRenderer blocks={[]} />
+        </div>
+      </main>
+      <SiteFooter site={site} />
     </div>
   );
 }
