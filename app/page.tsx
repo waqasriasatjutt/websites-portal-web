@@ -1,7 +1,5 @@
 import { headers } from 'next/headers';
 import { getPage } from '@/lib/odoo';
-import BlockRenderer from '@/components/BlockRenderer';
-import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 
 export const runtime = 'edge';
 export const revalidate = 300;
@@ -35,23 +33,24 @@ export default async function HomePage() {
     return (
       <div className="wp-container py-20">
         <h1 className="text-3xl font-bold">Site not found</h1>
-        <p className="mt-4" style={{ color: 'var(--muted)' }}>
-          No website configured for host <code>{host}</code>. Create it in Odoo → Websites Portal → Sites.
-        </p>
-        {debugError && <pre className="mt-4 text-xs bg-black/30 p-3 rounded">{debugError}</pre>}
+        <p className="mt-4">No website for host <code>{host}</code>.</p>
+        {debugError && <pre className="mt-4 text-xs">{debugError}</pre>}
       </div>
     );
   }
 
+  // DEBUG: minimal render — prove the fetch data structure is valid.
+  // If THIS renders, the problem is in BlockRenderer / SiteChrome / themeStyle.
+  // If THIS still 500s, the problem is in how the returned data is shaped.
   const { site, page } = data;
-
   return (
-    <div style={themeStyle(site.theme)}>
-      <SiteHeader site={site} />
-      <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
-        <BlockRenderer blocks={page.blocks} />
-      </main>
-      <SiteFooter site={site} />
+    <div className="wp-container py-20" style={themeStyle(site.theme)}>
+      <h1 className="text-3xl font-bold">{site.title}</h1>
+      <p style={{ color: 'var(--muted)' }}>{site.tagline}</p>
+      <p className="mt-6">Blocks loaded: {page.blocks.length}</p>
+      <ul className="mt-3 list-disc pl-6">
+        {page.blocks.map(b => <li key={b.id}>{b.type} ({Object.keys(b.props || {}).length} props)</li>)}
+      </ul>
     </div>
   );
 }
