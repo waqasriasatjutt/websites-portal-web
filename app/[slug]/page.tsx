@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
 import { getPage } from '@/lib/odoo';
+import { substituteDeep, substituteString } from '@/lib/tokens';
 import BlockRenderer from '@/components/BlockRenderer';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 import { notFound } from 'next/navigation';
@@ -26,13 +27,27 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
   if (!data) notFound();
 
   const { site, page } = data;
+  const tokens = (site.tokens || {}) as any;
+  const hydratedBlocks = page.blocks.map(b => ({
+    ...b,
+    props: substituteDeep(b.props || {}, tokens),
+  }));
+  const siteWithTokens = {
+    ...site,
+    title: substituteString(site.title || '', tokens) || site.title,
+    tagline: substituteString(site.tagline || '', tokens),
+    menu: (site.menu || []).map(m => ({
+      label: substituteString(m.label, tokens),
+      href: substituteString(m.href, tokens),
+    })),
+  };
   return (
     <div style={themeStyle(site.theme)}>
-      <SiteHeader site={site} />
+      <SiteHeader site={siteWithTokens} />
       <main style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-        <BlockRenderer blocks={page.blocks} />
+        <BlockRenderer blocks={hydratedBlocks} />
       </main>
-      <SiteFooter site={site} />
+      <SiteFooter site={siteWithTokens} />
     </div>
   );
 }
@@ -43,8 +58,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const host = (h.get('x-forwarded-host') || h.get('host') || '').split(':')[0].toLowerCase();
   const data = await getPage(host, { slug });
   if (!data) return { title: 'Page not found' };
+  const t = (data.site.tokens || {}) as any;
   return {
-    title: data.page.meta.title || data.site.title,
-    description: data.page.meta.description || data.site.description,
+    title: substituteString(data.page.meta.title || data.site.title, t),
+    description: substituteString(data.page.meta.description || data.site.description, t),
   };
 }

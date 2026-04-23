@@ -81,8 +81,9 @@ export async function generateMetadata() {
   const host = (h.get('x-forwarded-host') || h.get('host') || '').split(':')[0].toLowerCase();
   const data = await getPage(host, { home: true });
   if (!data) return { title: 'Site not found' };
+  const t = data.site.tokens || {};
   return {
-    title: data.page.meta.title || data.site.title,
-    description: data.page.meta.description || data.site.description,
+    title: substituteString(data.page.meta.title || data.site.title, t as any),
+    description: substituteString(data.page.meta.description || data.site.description, t as any),
   };
 }
