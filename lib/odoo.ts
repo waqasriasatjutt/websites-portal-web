@@ -79,7 +79,10 @@ async function fetchOdoo<T>(path: string, params: Record<string, string>): Promi
   const qs = new URLSearchParams(params).toString();
   const url = `${ODOO_URL}${path}?${qs}`;
   try {
-    const res = await fetch(url, { next: { revalidate: CACHE_SECONDS } });
+    // NOTE: `next: { revalidate }` is unreliable on Cloudflare Workers edge
+    // with @cloudflare/next-on-pages. Use standard cache headers + CF's own
+    // cache layer instead (the Odoo controller already sends s-maxage=300).
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) return null;
     const data: any = await res.json();
     if (!data.ok) return null;

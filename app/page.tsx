@@ -2,7 +2,6 @@ import { headers } from 'next/headers';
 import { getPage } from '@/lib/odoo';
 import BlockRenderer from '@/components/BlockRenderer';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
-import { notFound } from 'next/navigation';
 
 export const runtime = 'edge';
 export const revalidate = 300;
@@ -24,7 +23,14 @@ export default async function HomePage() {
   const h = await headers();
   const host = (h.get('x-forwarded-host') || h.get('host') || '').split(':')[0].toLowerCase();
 
-  const data = await getPage(host, { home: true });
+  let data: Awaited<ReturnType<typeof getPage>> = null;
+  let debugError: string | null = null;
+  try {
+    data = await getPage(host, { home: true });
+  } catch (err: any) {
+    debugError = `Fetch error for host=${host}: ${err?.message || String(err)}`;
+  }
+
   if (!data) {
     return (
       <div className="wp-container py-20">
@@ -32,6 +38,7 @@ export default async function HomePage() {
         <p className="mt-4" style={{ color: 'var(--muted)' }}>
           No website configured for host <code>{host}</code>. Create it in Odoo → Websites Portal → Sites.
         </p>
+        {debugError && <pre className="mt-4 text-xs bg-black/30 p-3 rounded">{debugError}</pre>}
       </div>
     );
   }
