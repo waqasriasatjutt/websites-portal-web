@@ -1,7 +1,8 @@
 import { headers } from 'next/headers';
 import { getPage } from '@/lib/odoo';
 import { substituteDeep, substituteString } from '@/lib/tokens';
-import BlockRenderer from '@/components/BlockRenderer';
+import BlockRenderer from '@/components/blocks';
+import type { AnyBlock } from '@/types/blocks';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 import { notFound } from 'next/navigation';
 
@@ -28,10 +29,10 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
 
   const { site, page } = data;
   const tokens = (site.tokens || {}) as any;
-  const hydratedBlocks = page.blocks.map(b => ({
+  const hydratedBlocks: AnyBlock[] = page.blocks.map(b => ({
     ...b,
     props: substituteDeep(b.props || {}, tokens),
-  }));
+  }) as AnyBlock);
   const siteWithTokens = {
     ...site,
     title: substituteString(site.title || '', tokens) || site.title,

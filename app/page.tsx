@@ -1,7 +1,8 @@
 import { headers } from 'next/headers';
 import { getPage, getPosts } from '@/lib/odoo';
 import { substituteDeep, substituteString } from '@/lib/tokens';
-import BlockRenderer from '@/components/BlockRenderer';
+import BlockRenderer from '@/components/blocks';
+import type { AnyBlock } from '@/types/blocks';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 
 export const runtime = 'edge';
@@ -45,13 +46,13 @@ export default async function HomePage() {
     const r = await getPosts(host, { limit: 6 });
     latestPosts = r?.posts || [];
   }
-  const hydratedBlocks = page.blocks.map(b => {
+  const hydratedBlocks: AnyBlock[] = page.blocks.map(b => {
     const withPosts = b.type === 'post_list'
       ? { ...b, props: { ...(b.props || {}), posts: latestPosts } }
       : b;
     // Token substitution — replaces {{key}} inside any string prop,
     // deeply (so items[].title, tiers[].features[] etc. are covered).
-    return { ...withPosts, props: substituteDeep(withPosts.props || {}, tokens) };
+    return { ...withPosts, props: substituteDeep(withPosts.props || {}, tokens) } as AnyBlock;
   });
 
   // Also substitute tokens in menu labels

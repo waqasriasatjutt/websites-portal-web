@@ -44,11 +44,14 @@ export interface SiteConfig {
   tokens?: Record<string, string | number>;
 }
 
-export interface Block {
-  id: string;
-  type: string;
-  props: Record<string, any>;
-}
+import type { AnyBlock } from '@/types/blocks';
+
+/**
+ * Block is re-exported here as the discriminated union from `types/blocks.ts`.
+ * The Odoo API may send slugs we haven't typed yet — at render time those
+ * fall through to the `Unknown` component, which is safe.
+ */
+export type Block = AnyBlock;
 
 export interface Page {
   id: number;
@@ -102,12 +105,16 @@ async function fetchOdoo<T>(path: string, params: Record<string, string>): Promi
   }
 }
 
+import { USE_FIXTURES, fixtureSite, fixturePage, fixturePosts, fixturePost } from './fixtures';
+
 export async function getSite(host: string): Promise<SiteConfig | null> {
+  if (USE_FIXTURES) return fixtureSite(host);
   const r = await fetchOdoo<{ site: SiteConfig }>('/wp/api/site', { host });
   return r?.site || null;
 }
 
 export async function getPage(host: string, slugOrHome: { slug?: string; home?: boolean }): Promise<{ site: SiteConfig; page: Page } | null> {
+  if (USE_FIXTURES) return fixturePage(host, slugOrHome);
   const params: Record<string, string> = { host };
   if (slugOrHome.home) params.home = '1';
   if (slugOrHome.slug) params.slug = slugOrHome.slug;
@@ -116,6 +123,7 @@ export async function getPage(host: string, slugOrHome: { slug?: string; home?: 
 }
 
 export async function getPosts(host: string, opts: { page?: number; limit?: number; category?: string; tag?: string } = {}) {
+  if (USE_FIXTURES) return fixturePosts(host, opts);
   const params: Record<string, string> = { host };
   if (opts.page) params.page = String(opts.page);
   if (opts.limit) params.limit = String(opts.limit);
@@ -125,5 +133,6 @@ export async function getPosts(host: string, opts: { page?: number; limit?: numb
 }
 
 export async function getPost(host: string, slug: string) {
+  if (USE_FIXTURES) return fixturePost(host, slug);
   return await fetchOdoo<{ site: SiteConfig; post: any }>('/wp/api/post', { host, slug });
 }

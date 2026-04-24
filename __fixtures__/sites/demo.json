@@ -1,0 +1,286 @@
+{
+  "site": {
+    "id": 1,
+    "slug": "demo",
+    "name": "Demo Site",
+    "title": "Acme Labs",
+    "tagline": "Engineering the future, one demo at a time.",
+    "description": "Fixtures-mode demo site — used by React devs working on the renderer without an Odoo backend.",
+    "domain": "demo.local",
+    "adsense_publisher_id": "",
+    "adsense_auto_ads": false,
+    "ga4": "",
+    "gsc_verification": "",
+    "logo_url": "",
+    "favicon_url": "",
+    "menu": [
+      { "label": "Home", "href": "/" },
+      { "label": "Features", "href": "/features" },
+      { "label": "Pricing", "href": "/pricing" },
+      { "label": "Blog", "href": "/blog" },
+      { "label": "Contact", "href": "/contact" }
+    ],
+    "theme": {
+      "id": 1,
+      "name": "Dark Cyan",
+      "slug": "dark-cyan",
+      "colors": {
+        "primary": "#00d4ff",
+        "accent": "#9eff00",
+        "bg": "#0a0e27",
+        "text": "#f8fafc",
+        "muted": "#94a3b8"
+      },
+      "fonts": { "body": "Inter", "display": "Space Grotesk" },
+      "radius": "0.75rem",
+      "density": "comfortable",
+      "extras": {}
+    },
+    "seo": {
+      "focus_keyword": "demo fixture",
+      "secondary_keywords": "offline dev, renderer",
+      "niche": "saas",
+      "schema_type": "Organization",
+      "phone": "+1-555-ACME",
+      "whatsapp": ""
+    },
+    "tokens": {
+      "service_name": "Acme Labs",
+      "city": "San Francisco",
+      "support_email": "hello@acme.example"
+    }
+  },
+  "pages": {
+    "home": {
+      "id": 10,
+      "title": "Home",
+      "slug": "home",
+      "is_homepage": true,
+      "meta": {
+        "title": "{{service_name}} — Engineering the future",
+        "description": "{{service_name}} builds the tools {{city}} relies on.",
+        "keywords": "",
+        "canonical": "",
+        "noindex": false,
+        "og_image": ""
+      },
+      "schema": null,
+      "published_at": "2026-04-24T00:00:00Z",
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "hero",
+          "props": {
+            "eyebrow": "Fixtures mode",
+            "heading": "Ship faster",
+            "heading_before": "Build like",
+            "heading_after": "with {{service_name}}",
+            "subtitle": "This page is rendered from a local JSON fixture — no Odoo backend needed. Edit __fixtures__/sites/demo.json and save.",
+            "cta_label": "Get started",
+            "cta_href": "#",
+            "secondary_label": "Read docs",
+            "secondary_href": "#",
+            "stats": [
+              { "value": "99.9%", "label": "Uptime" },
+              { "value": "14", "label": "Templates" },
+              { "value": "9", "label": "Block types" },
+              { "value": "1", "label": "JSON file" }
+            ]
+          }
+        },
+        {
+          "id": "b2",
+          "type": "features",
+          "props": {
+            "eyebrow": "What's included",
+            "heading": "Everything a renderer should have",
+            "subtitle": "Nine typed block variants, token substitution, and a fixture pipeline that works offline.",
+            "items": [
+              { "icon": "⚡", "title": "Edge runtime", "description": "Renders on Cloudflare Workers with no cold starts." },
+              { "icon": "🎨", "title": "Theme tokens", "description": "CSS custom properties flow from site theme → block." },
+              { "icon": "🧩", "title": "Typed blocks", "description": "Discriminated union with autocomplete for every prop." },
+              { "icon": "🔁", "title": "Token substitution", "description": "{{service_name}} and other variables expand at render time." },
+              { "icon": "📦", "title": "Fixtures mode", "description": "NEXT_PUBLIC_USE_FIXTURES=1 unplugs from Odoo for offline dev." },
+              { "icon": "📝", "title": "Block contribution guide", "description": "Add a new block in five steps — see components/blocks/README.md." }
+            ]
+          }
+        },
+        {
+          "id": "b3",
+          "type": "testimonial",
+          "props": {
+            "quote": "The fixtures mode is a godsend — I was productive on this codebase within the first hour without any backend credentials.",
+            "author": "Frontend Dev",
+            "role": "Contractor"
+          }
+        },
+        {
+          "id": "b4",
+          "type": "pricing",
+          "props": {
+            "eyebrow": "Plans",
+            "heading": "Simple, scales with you",
+            "subtitle": "Every plan includes the full renderer and all 14 templates.",
+            "tiers": [
+              {
+                "name": "Starter",
+                "description": "Solo builders",
+                "price": "$0",
+                "period": "/mo",
+                "features": ["1 site", "Community support", "Cloudflare Pages"],
+                "cta_label": "Start free",
+                "cta_href": "#"
+              },
+              {
+                "name": "Team",
+                "description": "Growing studios",
+                "price": "$29",
+                "period": "/mo",
+                "features": ["10 sites", "Priority email", "Custom domains", "Analytics rollup"],
+                "cta_label": "Upgrade",
+                "cta_href": "#",
+                "highlight": true
+              },
+              {
+                "name": "Agency",
+                "description": "White-label resellers",
+                "price": "$99",
+                "period": "/mo",
+                "features": ["Unlimited sites", "Dedicated Slack", "R2 media CDN", "Early block access"],
+                "cta_label": "Contact sales",
+                "cta_href": "#"
+              }
+            ]
+          }
+        },
+        {
+          "id": "b5",
+          "type": "faq",
+          "props": {
+            "eyebrow": "FAQ",
+            "heading": "Common questions",
+            "items": [
+              { "q": "Do I need an Odoo backend to work on this?", "a": "No. Set NEXT_PUBLIC_USE_FIXTURES=1 and pnpm dev will render this demo site end-to-end from __fixtures__/sites/demo.json." },
+              { "q": "How do I add a new block type?", "a": "See components/blocks/README.md for the five-step contribution guide." },
+              { "q": "Where are the block prop types?", "a": "types/blocks.ts — one discriminated union covering every block variant." },
+              { "q": "Can I preview a different theme locally?", "a": "Edit the `theme.colors` object in the fixture JSON and save — changes apply on next request." }
+            ]
+          }
+        },
+        {
+          "id": "b6",
+          "type": "post_list",
+          "props": {
+            "eyebrow": "From the blog",
+            "heading": "Latest posts"
+          }
+        },
+        {
+          "id": "b7",
+          "type": "cta",
+          "props": {
+            "eyebrow": "Ready?",
+            "heading": "Clone, install, ship.",
+            "subtitle": "The renderer is open for extension — typed blocks, themed tokens, and fixtures for offline iteration.",
+            "cta_label": "Get the repo",
+            "cta_href": "#"
+          }
+        }
+      ]
+    },
+    "features": {
+      "id": 11,
+      "title": "Features",
+      "slug": "features",
+      "is_homepage": false,
+      "meta": { "title": "Features — {{service_name}}", "description": "", "keywords": "", "canonical": "", "noindex": false, "og_image": "" },
+      "schema": null,
+      "published_at": "2026-04-24T00:00:00Z",
+      "blocks": [
+        {
+          "id": "f1",
+          "type": "hero",
+          "props": { "eyebrow": "Features", "heading": "Built for scale", "subtitle": "Everything you need to run {{service_name}} at any size." }
+        },
+        {
+          "id": "f2",
+          "type": "richtext",
+          "props": {
+            "html": "<h2>Why {{service_name}}</h2><p>Render-layer simplicity: typed blocks, token substitution, edge-first. Works without a backend during development via fixtures mode.</p>"
+          }
+        }
+      ]
+    },
+    "pricing": {
+      "id": 12,
+      "title": "Pricing",
+      "slug": "pricing",
+      "is_homepage": false,
+      "meta": { "title": "Pricing — {{service_name}}", "description": "", "keywords": "", "canonical": "", "noindex": false, "og_image": "" },
+      "schema": null,
+      "published_at": "2026-04-24T00:00:00Z",
+      "blocks": [
+        {
+          "id": "p1",
+          "type": "pricing",
+          "props": {
+            "eyebrow": "Pricing",
+            "heading": "Pick your plan",
+            "tiers": [
+              { "name": "Starter", "price": "$0", "period": "/mo", "features": ["1 site"], "cta_label": "Start", "cta_href": "#" },
+              { "name": "Team", "price": "$29", "period": "/mo", "features": ["10 sites", "Priority email"], "cta_label": "Upgrade", "cta_href": "#", "highlight": true },
+              { "name": "Agency", "price": "$99", "period": "/mo", "features": ["Unlimited"], "cta_label": "Contact", "cta_href": "#" }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "posts": [
+    {
+      "id": 1,
+      "slug": "shipping-websites-portal",
+      "title": "Shipping websites-portal: lessons from the first 100 tenants",
+      "subtitle": "",
+      "excerpt": "What we learned building a multi-tenant CMS on Odoo + Next.js edge.",
+      "category": "Engineering",
+      "tags": [],
+      "author": "Acme Team",
+      "cover_url": "",
+      "cover_alt": "",
+      "post_date": "2026-04-24",
+      "published_at": "2026-04-24T00:00:00Z",
+      "read_time_min": 6
+    },
+    {
+      "id": 2,
+      "slug": "block-contribution-guide",
+      "title": "Adding a new block type in five steps",
+      "subtitle": "",
+      "excerpt": "A walkthrough of the contribution guide in components/blocks/README.md.",
+      "category": "Tutorial",
+      "tags": [],
+      "author": "Acme Team",
+      "cover_url": "",
+      "cover_alt": "",
+      "post_date": "2026-04-22",
+      "published_at": "2026-04-22T00:00:00Z",
+      "read_time_min": 4
+    },
+    {
+      "id": 3,
+      "slug": "edge-first-rendering",
+      "title": "Why we render on the edge",
+      "subtitle": "",
+      "excerpt": "Trade-offs, caching, and why Cloudflare Workers beat a traditional SSR origin for this workload.",
+      "category": "Architecture",
+      "tags": [],
+      "author": "Acme Team",
+      "cover_url": "",
+      "cover_alt": "",
+      "post_date": "2026-04-20",
+      "published_at": "2026-04-20T00:00:00Z",
+      "read_time_min": 8
+    }
+  ]
+}
