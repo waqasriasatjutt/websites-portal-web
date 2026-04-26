@@ -17,6 +17,15 @@ export interface Theme {
   extras: Record<string, any>;
 }
 
+export interface MenuItem {
+  label: string;
+  href: string;
+}
+
+export interface FooterLink { label: string; href: string }
+export interface FooterColumn { title: string; links: FooterLink[] }
+export interface SocialLink { network: string; href: string }
+
 export interface SiteConfig {
   id: number;
   slug: string;
@@ -25,14 +34,30 @@ export interface SiteConfig {
   tagline: string;
   description: string;
   domain: string;
+  lang?: string;
+  locale?: string;
   adsense_publisher_id: string;
   adsense_auto_ads: boolean;
   ga4: string;
   gsc_verification: string;
+  bing_verification?: string;
+  yandex_verification?: string;
+  fb_pixel_id?: string;
+  fb_app_id?: string;
+  twitter_handle?: string;
   logo_url: string;
   favicon_url: string;
-  menu: Array<{ label: string; href: string }>;
+  default_og_image_url?: string;
+  menu: MenuItem[];
   theme: Theme;
+  header_cta?: { label: string; href: string };
+  footer?: {
+    about: string;
+    columns: FooterColumn[];
+    socials: SocialLink[];
+    copyright: string;
+    credit: string;
+  };
   seo?: {
     focus_keyword: string;
     secondary_keywords: string;
@@ -53,20 +78,31 @@ import type { AnyBlock } from '@/types/blocks';
  */
 export type Block = AnyBlock;
 
+export interface PageMeta {
+  title: string;
+  description: string;
+  keywords: string;
+  canonical: string;
+  noindex: boolean;
+  nofollow?: boolean;
+  og_title?: string;
+  og_description?: string;
+  og_type?: string;
+  og_image: string;
+  og_image_alt?: string;
+  twitter_card?: string;
+  twitter_title?: string;
+  twitter_description?: string;
+  twitter_image?: string;
+}
+
 export interface Page {
   id: number;
   title: string;
   slug: string;
   is_homepage: boolean;
   blocks: Block[];
-  meta: {
-    title: string;
-    description: string;
-    keywords: string;
-    canonical: string;
-    noindex: boolean;
-    og_image: string;
-  };
+  meta: PageMeta;
   schema: any;
   published_at: string | null;
 }
@@ -135,4 +171,121 @@ export async function getPosts(host: string, opts: { page?: number; limit?: numb
 export async function getPost(host: string, slug: string) {
   if (USE_FIXTURES) return fixturePost(host, slug);
   return await fetchOdoo<{ site: SiteConfig; post: any }>('/wp/api/post', { host, slug });
+}
+
+/**
+ * Build a complete Next.js Metadata object from site + page SEO data.
+ * Used by both home and dynamic page generateMetadata.
+ */
+export function buildMetadata(site: SiteConfig, page: Page, host: string, pathname: string) {
+  const proto = process.env.NEXT_PUBLIC_SITE_PROTO || 'https';
+  const baseUrl = `${proto}://${host}`;
+  const pageUrl = `${baseUrl}${pathname.startsWith('/') ? pathname : '/' + pathname}`;
+
+  const title = page.meta?.title || page.title || site.title;
+  const description = page.meta?.description || site.description || '';
+  const canonical = page.meta?.canonical || pageUrl;
+
+  // Resolve absolute URLs for images (Odoo paths are relative)
+  const absUrl = (u?: string) => {
+    if (!u) return undefined;
+    if (u.startsWith('http://') || u.startsWith('https://')) return u;
+    return `${ODOO_URL}${u}`;
+  };
+
+  const ogImage = absUrl(page.meta?.og_image || site.default_og_image_url);
+  const twitterImage = absUrl(page.meta?.twitter_image) || ogImage;
+
+  const robotsParts: string[] = [];
+  if (page.meta?.noindex) robotsParts.push('noindex'); else robotsParts.push('index');
+  if (page.meta?.nofollow) robotsParts.push('nofollow'); else robotsParts.push('follow');
+
+  return {
+    title,
+    description,
+    keywords: page.meta?.keywords || site.seo?.secondary_keywords || undefined,
+    metadataBase: new URL(baseUrl),
+    alternates: {
+      canonical,
+    },
+    robots: robotsParts.join(', '),
+    icons: {
+      icon: site.favicon_url ? absUrl(site.favicon_url) : undefined,
+      shortcut: site.favicon_url ? absUrl(site.favicon_url) : undefined,
+    },
+    openGraph: {
+      title: page.meta?.og_title || title,
+      description: page.meta?.og_description || description,
+      url: canonical,
+      siteName: site.title || site.name,
+      type: (page.meta?.og_type as any) || 'website',
+      locale: site.locale || 'en_US',
+      images: ogImage ? [{
+        url: ogImage,
+        alt: page.meta?.og_image_alt || title,
+        width: 1200,
+        height: 630,
+      }] : undefined,
+    },
+    twitter: {
+      card: (page.meta?.twitter_card as any) || 'summary_large_image',
+      site: site.twitter_handle || undefined,
+      creator: site.twitter_handle || undefined,
+      title: page.meta?.twitter_title || page.meta?.og_title || title,
+      description: page.meta?.twitter_description || page.meta?.og_description || description,
+      images: twitterImage ? [twitterImage] : undefined,
+    },
+    other: {
+      ...(site.gsc_verification ? { 'google-site-verification': site.gsc_verification } : {}),
+      ...(site.bing_verification ? { 'msvalidate.01': site.bing_verification } : {}),
+      ...(site.yandex_verification ? { 'yandex-verification': site.yandex_verification } : {}),
+      ...(site.fb_app_id ? { 'fb:app_id': site.fb_app_id } : {}),
+    },
+  } as const;
+}
+
+/**
+ * Auto-generate JSON-LD schema for a page based on niche + page meta.
+ * Returns null if no schema can be inferred — caller should also include any
+ * page-specific schema_json from Odoo.
+ */
+export function buildJsonLd(site: SiteConfig, page: Page, host: string, pathname: string) {
+  const proto = process.env.NEXT_PUBLIC_SITE_PROTO || 'https';
+  const baseUrl = `${proto}://${host}`;
+  const pageUrl = `${baseUrl}${pathname}`;
+
+  const orgType = site.seo?.schema_type || (
+    site.seo?.niche === 'local' ? 'LocalBusiness' :
+    site.seo?.niche === 'food' ? 'Restaurant' :
+    site.seo?.niche === 'healthcare' ? 'MedicalBusiness' :
+    site.seo?.niche === 'real_estate' ? 'RealEstateAgent' :
+    'Organization'
+  );
+
+  const org: any = {
+    '@type': orgType,
+    name: site.title || site.name,
+    url: baseUrl,
+  };
+  if (site.logo_url) org.logo = site.logo_url.startsWith('http') ? site.logo_url : `${ODOO_URL}${site.logo_url}`;
+  if (site.description) org.description = site.description;
+  if (site.seo?.phone) org.telephone = site.seo.phone;
+
+  const webPage: any = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': pageUrl,
+    url: pageUrl,
+    name: page.meta?.title || page.title,
+    description: page.meta?.description || site.description,
+    inLanguage: site.lang || 'en',
+    isPartOf: {
+      '@type': 'WebSite',
+      url: baseUrl,
+      name: site.title || site.name,
+    },
+    publisher: org,
+  };
+
+  return webPage;
 }

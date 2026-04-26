@@ -1,9 +1,10 @@
 import { headers } from 'next/headers';
-import { getPage, getPosts } from '@/lib/odoo';
+import { getPage, getPosts, buildMetadata, buildJsonLd } from '@/lib/odoo';
 import { substituteDeep, substituteString } from '@/lib/tokens';
 import BlockRenderer from '@/components/blocks';
 import type { AnyBlock } from '@/types/blocks';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
+import SiteScripts from '@/components/SiteScripts';
 
 export const runtime = 'edge';
 export const revalidate = 300;
@@ -21,10 +22,13 @@ function themeStyle(theme: any): React.CSSProperties {
   };
 }
 
-export default async function HomePage() {
+async function resolveHost() {
   const h = await headers();
-  const host = (h.get('x-forwarded-host') || h.get('host') || '').split(':')[0].toLowerCase();
+  return (h.get('x-forwarded-host') || h.get('host') || '').split(':')[0].toLowerCase();
+}
 
+export default async function HomePage() {
+  const host = await resolveHost();
   const data = await getPage(host, { home: true });
   if (!data) {
     return (
@@ -38,8 +42,6 @@ export default async function HomePage() {
   const tokens = { ...(site.tokens || {}) };
 
   // Auto-inject latest posts into any post_list block(s) on the page.
-  // Editors leave `props.posts` empty in Odoo; we populate it at render time
-  // so the block always shows fresh content without the editor maintaining it.
   const needsPosts = page.blocks.some(b => b.type === 'post_list');
   let latestPosts: any[] = [];
   if (needsPosts) {
@@ -50,41 +52,84 @@ export default async function HomePage() {
     const withPosts = b.type === 'post_list'
       ? { ...b, props: { ...(b.props || {}), posts: latestPosts } }
       : b;
-    // Token substitution — replaces {{key}} inside any string prop,
-    // deeply (so items[].title, tiers[].features[] etc. are covered).
     return { ...withPosts, props: substituteDeep(withPosts.props || {}, tokens) } as AnyBlock;
   });
 
-  // Also substitute tokens in menu labels
+  // Substitute tokens in chrome content
   const siteWithTokens = {
     ...site,
     title: substituteString(site.title || '', tokens as any) || site.title,
     tagline: substituteString(site.tagline || '', tokens as any),
+    description: substituteString(site.description || '', tokens as any),
     menu: (site.menu || []).map(m => ({
       label: substituteString(m.label, tokens as any),
       href: substituteString(m.href, tokens as any),
     })),
+    footer: site.footer ? {
+      ...site.footer,
+      about: substituteString(site.footer.about || '', tokens as any),
+      copyright: substituteString(site.footer.copyright || '', tokens as any),
+      credit: substituteString(site.footer.credit || '', tokens as any),
+      columns: (site.footer.columns || []).map(c => ({
+        title: substituteString(c.title, tokens as any),
+        links: (c.links || []).map(l => ({
+          label: substituteString(l.label, tokens as any),
+          href: substituteString(l.href, tokens as any),
+        })),
+      })),
+    } : undefined,
+    header_cta: site.header_cta ? {
+      label: substituteString(site.header_cta.label || '', tokens as any),
+      href: substituteString(site.header_cta.href || '', tokens as any),
+    } : undefined,
   };
 
+  // JSON-LD schema (auto + page-specific override merged)
+  const autoSchema = buildJsonLd(site, page, host, '/');
+  const pageSchema = page.schema || null;
+  const schemas = [autoSchema, pageSchema].filter(Boolean);
+
   return (
-    <div style={themeStyle(site.theme)}>
-      <SiteHeader site={siteWithTokens} />
+    <div lang={site.lang || 'en'} style={themeStyle(site.theme)}>
+      {schemas.map((s, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }}
+        />
+      ))}
+      <SiteHeader site={siteWithTokens as any} />
       <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
         <BlockRenderer blocks={hydratedBlocks} />
       </main>
-      <SiteFooter site={siteWithTokens} />
+      <SiteFooter site={siteWithTokens as any} />
+      <SiteScripts site={site} />
     </div>
   );
 }
 
 export async function generateMetadata() {
-  const h = await headers();
-  const host = (h.get('x-forwarded-host') || h.get('host') || '').split(':')[0].toLowerCase();
+  const host = await resolveHost();
   const data = await getPage(host, { home: true });
   if (!data) return { title: 'Site not found' };
-  const t = data.site.tokens || {};
-  return {
-    title: substituteString(data.page.meta.title || data.site.title, t as any),
-    description: substituteString(data.page.meta.description || data.site.description, t as any),
-  };
+  const t = (data.site.tokens || {}) as any;
+  // Substitute tokens before generating metadata
+  const meta = buildMetadata(
+    {
+      ...data.site,
+      title: substituteString(data.site.title || '', t) || data.site.title,
+      description: substituteString(data.site.description || '', t) || data.site.description,
+    },
+    {
+      ...data.page,
+      meta: {
+        ...data.page.meta,
+        title: substituteString(data.page.meta?.title || data.page.title || '', t),
+        description: substituteString(data.page.meta?.description || '', t),
+      },
+    },
+    host,
+    '/'
+  );
+  return meta;
 }
