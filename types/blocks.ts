@@ -157,6 +157,184 @@ export interface AdSenseBlock {
     };
 }
 
+export interface VideoBlock {
+    id: string;
+    type: 'video';
+    props: {
+        eyebrow?: string;
+        heading?: string;
+        subtitle?: string;
+        video_url: string;
+        poster?: string;
+        autoplay?: boolean;
+        loop?: boolean;
+        caption?: string;
+    };
+}
+
+export interface GalleryItem {
+    image: string;
+    caption?: string;
+    href?: string;
+}
+export interface GalleryBlock {
+    id: string;
+    type: 'gallery';
+    props: {
+        eyebrow?: string;
+        heading?: string;
+        layout?: 'grid_3' | 'grid_4' | 'masonry' | 'carousel';
+        items: GalleryItem[];
+    };
+}
+
+export interface FormField {
+    key: string;
+    label: string;
+    type: 'text' | 'email' | 'tel' | 'textarea' | 'select';
+    required?: boolean;
+    placeholder?: string;
+    options?: string;
+}
+export interface ContactFormBlock {
+    id: string;
+    type: 'contact_form';
+    props: {
+        eyebrow?: string;
+        heading?: string;
+        subtitle?: string;
+        submit_label?: string;
+        success_message?: string;
+        redirect_url?: string;
+        fields: FormField[];
+    };
+}
+
+export interface NewsletterBlock {
+    id: string;
+    type: 'newsletter';
+    props: {
+        eyebrow?: string;
+        heading?: string;
+        subtitle?: string;
+        placeholder?: string;
+        submit_label?: string;
+        success_message?: string;
+        layout?: 'inline' | 'stacked' | 'hero';
+    };
+}
+
+export interface MapBlock {
+    id: string;
+    type: 'map';
+    props: {
+        eyebrow?: string;
+        heading?: string;
+        address_line?: string;
+        map_query: string;
+        height_px?: string;
+        phone?: string;
+        hours?: string;
+    };
+}
+
+export interface LogoCloudItem {
+    image: string;
+    alt: string;
+    href?: string;
+}
+export interface LogoCloudBlock {
+    id: string;
+    type: 'logo_cloud';
+    props: {
+        heading?: string;
+        layout?: 'row' | 'grid' | 'marquee';
+        grayscale?: boolean;
+        items: LogoCloudItem[];
+    };
+}
+
+export interface StatItemFull {
+    value: string;
+    label: string;
+    icon?: string;
+}
+export interface StatsCounterBlock {
+    id: string;
+    type: 'stats_counter';
+    props: {
+        eyebrow?: string;
+        heading?: string;
+        items: StatItemFull[];
+    };
+}
+
+export interface TimelineItem {
+    date?: string;
+    title: string;
+    description?: string;
+    icon?: string;
+}
+export interface TimelineBlock {
+    id: string;
+    type: 'timeline';
+    props: {
+        eyebrow?: string;
+        heading?: string;
+        layout?: 'vertical' | 'horizontal';
+        items: TimelineItem[];
+    };
+}
+
+export interface TeamMember {
+    photo?: string;
+    name: string;
+    role?: string;
+    bio?: string;
+    linkedin?: string;
+    twitter?: string;
+}
+export interface TeamBlock {
+    id: string;
+    type: 'team';
+    props: {
+        eyebrow?: string;
+        heading?: string;
+        subtitle?: string;
+        items: TeamMember[];
+    };
+}
+
+export interface CodeBlock {
+    id: string;
+    type: 'code';
+    props: {
+        heading?: string;
+        language?: string;
+        code: string;
+        caption?: string;
+    };
+}
+
+export interface CustomHTMLBlock {
+    id: string;
+    type: 'custom_html';
+    props: {
+        html: string;
+    };
+}
+
+export interface ReactWidgetBlock {
+    id: string;
+    type: 'react_widget';
+    props: {
+        slot_name: string;
+        props_json?: string;
+        min_height?: string;
+        placeholder_text?: string;
+    };
+}
+
 /** Discriminated union of every supported block. */
 export type AnyBlock =
     | HeroBlock
@@ -167,7 +345,19 @@ export type AnyBlock =
     | PricingBlock
     | PostListBlock
     | RichTextBlock
-    | AdSenseBlock;
+    | AdSenseBlock
+    | VideoBlock
+    | GalleryBlock
+    | ContactFormBlock
+    | NewsletterBlock
+    | MapBlock
+    | LogoCloudBlock
+    | StatsCounterBlock
+    | TimelineBlock
+    | TeamBlock
+    | CodeBlock
+    | CustomHTMLBlock
+    | ReactWidgetBlock;
 
 /** Slug string literal of every supported block. */
 export type BlockType = AnyBlock['type'];
