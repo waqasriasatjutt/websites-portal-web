@@ -58,6 +58,14 @@ export interface SiteConfig {
     copyright: string;
     credit: string;
   };
+  custom_code?: {
+    head_html: string;
+    body_start_html: string;
+    body_end_html: string;
+    css: string;
+    js: string;
+    extra_meta?: Array<{ name?: string; property?: string; content: string }>;
+  };
   seo?: {
     focus_keyword: string;
     secondary_keywords: string;

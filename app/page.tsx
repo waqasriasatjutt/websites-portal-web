@@ -5,6 +5,7 @@ import BlockRenderer from '@/components/blocks';
 import type { AnyBlock } from '@/types/blocks';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 import SiteScripts from '@/components/SiteScripts';
+import { CustomHeadCss, CustomBodyStart, CustomBodyEnd } from '@/components/CustomCodeInject';
 
 export const runtime = 'edge';
 export const revalidate = 300;
@@ -91,6 +92,7 @@ export default async function HomePage() {
 
   return (
     <div lang={site.lang || 'en'} style={themeStyle(site.theme)}>
+      <CustomHeadCss site={site} />
       {schemas.map((s, i) => (
         <script
           key={i}
@@ -98,12 +100,14 @@ export default async function HomePage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(s) }}
         />
       ))}
+      <CustomBodyStart site={site} />
       <SiteHeader site={siteWithTokens as any} />
       <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
         <BlockRenderer blocks={hydratedBlocks} />
       </main>
       <SiteFooter site={siteWithTokens as any} />
       <SiteScripts site={site} />
+      <CustomBodyEnd site={site} />
     </div>
   );
 }
