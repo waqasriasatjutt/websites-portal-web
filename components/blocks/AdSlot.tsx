@@ -1,11 +1,16 @@
 import type { PropsOf } from '@/types/blocks';
 
-export default function AdSlot({ props }: { props: PropsOf<'adsense'> }) {
+export default function AdSlot({ props }: { props: PropsOf<'adsense'> & { label?: string } }) {
     if (!props.client) return null;
+    const label = (props as any).label;
     return (
         <section className="my-10">
             <div className="wp-container-narrow">
-                <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'var(--muted)' }}>Advertisement</div>
+                {label !== '' && (
+                    <div className="text-[10px] uppercase tracking-wider mb-2" style={{ color: 'var(--muted)' }}>
+                        {label || 'Advertisement'}
+                    </div>
+                )}
                 <ins className="adsbygoogle block min-h-[120px] rounded"
                      style={{ display: 'block', textAlign: 'center' }}
                      data-ad-client={props.client}

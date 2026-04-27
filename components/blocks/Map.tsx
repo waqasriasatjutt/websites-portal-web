@@ -1,9 +1,11 @@
 import type { PropsOf } from '@/types/blocks';
 
-export default function MapBlock({ props }: { props: PropsOf<'map'> }) {
+export default function MapBlock({ props }: { props: PropsOf<'map'> & { phone_label?: string; hours_label?: string } }) {
   const q = encodeURIComponent(props.map_query || '');
   const src = `https://www.google.com/maps?q=${q}&output=embed`;
   const height = parseInt(props.height_px || '400', 10) || 400;
+  const phoneLabel = (props as any).phone_label || 'Phone';
+  const hoursLabel = (props as any).hours_label || 'Hours';
   return (
     <section className="wp-section">
       <div className="wp-container">
@@ -28,13 +30,13 @@ export default function MapBlock({ props }: { props: PropsOf<'map'> }) {
             )}
             {props.phone && (
               <p className="mt-3 text-sm">
-                <span style={{ color: 'var(--muted)' }}>Phone: </span>
+                <span style={{ color: 'var(--muted)' }}>{phoneLabel}: </span>
                 <a href={`tel:${props.phone}`} className="hover:text-[var(--primary)]">{props.phone}</a>
               </p>
             )}
             {props.hours && (
               <div className="mt-3 text-sm whitespace-pre-line" style={{ color: 'var(--muted)' }}>
-                <span style={{ color: 'var(--text)' }}>Hours:</span>{'\n'}
+                <span style={{ color: 'var(--text)' }}>{hoursLabel}:</span>{'\n'}
                 {props.hours}
               </div>
             )}
