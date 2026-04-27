@@ -66,6 +66,7 @@ export interface SiteConfig {
     js: string;
     extra_meta?: Array<{ name?: string; property?: string; content: string }>;
   };
+  hreflang?: Array<{ lang: string; url: string }>;
   seo?: {
     focus_keyword: string;
     secondary_keywords: string;
