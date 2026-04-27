@@ -249,6 +249,13 @@ export function buildMetadata(site: SiteConfig, page: Page, host: string, pathna
       ...(site.yandex_verification ? { 'yandex-verification': site.yandex_verification } : {}),
       ...(site.fb_app_id ? { 'fb:app_id': site.fb_app_id } : {}),
     },
+    // hreflang alternates → next.js converts to <link rel="alternate" hreflang="…" href="…"/>
+    ...((site.hreflang && site.hreflang.length > 0) ? {
+      alternates: {
+        canonical,
+        languages: Object.fromEntries(site.hreflang.map(h => [h.lang, h.url])),
+      },
+    } : {}),
   } as const;
 }
 
