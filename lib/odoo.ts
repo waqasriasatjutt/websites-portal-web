@@ -10,11 +10,14 @@ export interface Theme {
   id: number;
   name: string;
   slug: string;
+  version?: string;
   colors: { primary: string; accent: string; bg: string; text: string; muted: string };
   fonts: { body: string; display: string };
   radius: string;
   density: string;
   extras: Record<string, any>;
+  /** Code shipped by the theme — applied before the per-site custom_code. */
+  code?: { css: string; head_html: string; body_end_html: string };
 }
 
 export interface MenuItem {
@@ -110,6 +113,10 @@ export interface Page {
   title: string;
   slug: string;
   is_homepage: boolean;
+  /** 'blocks' (render the block list) or 'visual' (render html_body + css_body). */
+  editor_mode?: 'blocks' | 'visual';
+  html_body?: string;
+  css_body?: string;
   blocks: Block[];
   meta: PageMeta;
   schema: any;

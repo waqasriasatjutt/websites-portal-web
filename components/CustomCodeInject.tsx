@@ -1,6 +1,29 @@
 import type { SiteConfig } from '@/lib/odoo';
 
 /**
+ * Theme-shipped code (site.theme.code) — render BEFORE CustomHeadCss/CustomBodyEnd
+ * so the per-site overrides win. Authored by web developers on the theme record.
+ */
+export function ThemeHeadCss({ site }: { site: SiteConfig }) {
+  const code = site.theme?.code;
+  if (!code) return null;
+  const css = code.css?.trim();
+  const head = code.head_html?.trim();
+  return (
+    <>
+      {head && <span dangerouslySetInnerHTML={{ __html: head }} suppressHydrationWarning />}
+      {css && <style dangerouslySetInnerHTML={{ __html: css }} data-source="theme-css" />}
+    </>
+  );
+}
+
+export function ThemeBodyEnd({ site }: { site: SiteConfig }) {
+  const body = site.theme?.code?.body_end_html?.trim();
+  if (!body) return null;
+  return <span dangerouslySetInnerHTML={{ __html: body }} suppressHydrationWarning />;
+}
+
+/**
  * Renders the site's custom_head_html + custom_css inside the page output.
  * Should be rendered at the top of the page tree so the styles + meta land
  * before content. Note: Next.js doesn't expose <head> directly in App Router

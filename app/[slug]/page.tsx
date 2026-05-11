@@ -5,27 +5,48 @@ import BlockRenderer from '@/components/blocks';
 import type { AnyBlock } from '@/types/blocks';
 import { SiteHeader, SiteFooter } from '@/components/SiteChrome';
 import SiteScripts from '@/components/SiteScripts';
-import { CustomHeadCss, CustomBodyStart, CustomBodyEnd } from '@/components/CustomCodeInject';
+import {
+  ThemeHeadCss, ThemeBodyEnd,
+  CustomHeadCss, CustomBodyStart, CustomBodyEnd,
+} from '@/components/CustomCodeInject';
 import { notFound } from 'next/navigation';
 
 export const runtime = 'edge';
 
 function themeStyle(theme: any): React.CSSProperties {
-  if (!theme) return {};
+  const c = theme?.colors || {};
+  const f = theme?.fonts || {};
+  const primary = c.primary || '#00d4ff';
+  const accent = c.accent || '#9eff00';
+  const bg = c.bg || '#0a0e27';
+  const text = c.text || '#f8fafc';
+  const muted = c.muted || '#94a3b8';
+  const fontBody = `'${f.body || 'Inter'}', system-ui, sans-serif`;
+  const fontDisplay = `'${f.display || 'Space Grotesk'}', Inter, system-ui, sans-serif`;
   return {
-    ['--primary' as any]: theme.colors?.primary || '#00d4ff',
-    ['--accent' as any]: theme.colors?.accent || '#9eff00',
-    ['--bg' as any]: theme.colors?.bg || '#0a0e27',
-    ['--text' as any]: theme.colors?.text || '#f8fafc',
-    ['--muted' as any]: theme.colors?.muted || '#94a3b8',
-    ['--font-body' as any]: `'${theme.fonts?.body || 'Inter'}', system-ui, sans-serif`,
-    ['--font-display' as any]: `'${theme.fonts?.display || 'Space Grotesk'}', Inter, system-ui, sans-serif`,
+    ['--primary' as any]: primary, ['--wp-primary' as any]: primary,
+    ['--accent' as any]: accent, ['--wp-accent' as any]: accent,
+    ['--bg' as any]: bg, ['--wp-bg' as any]: bg,
+    ['--text' as any]: text, ['--wp-text' as any]: text,
+    ['--muted' as any]: muted, ['--wp-muted' as any]: muted,
+    ['--font-body' as any]: fontBody, ['--wp-font-body' as any]: fontBody,
+    ['--font-display' as any]: fontDisplay, ['--wp-font-display' as any]: fontDisplay,
   };
 }
 
 async function resolveHost() {
   const h = await headers();
   return (h.get('x-forwarded-host') || h.get('host') || '').split(':')[0].toLowerCase();
+}
+
+/** A page in 'visual' editor mode: render its html_body + css_body directly. */
+function VisualPage({ html, css }: { html: string; css: string }) {
+  return (
+    <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
+      {css && <style dangerouslySetInnerHTML={{ __html: css }} data-source="visual-page-css" />}
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </main>
+  );
 }
 
 export default async function DynamicPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -36,10 +57,6 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
 
   const { site, page } = data;
   const tokens = (site.tokens || {}) as any;
-  const hydratedBlocks: AnyBlock[] = page.blocks.map(b => ({
-    ...b,
-    props: substituteDeep(b.props || {}, tokens),
-  }) as AnyBlock);
 
   const siteWithTokens = {
     ...site,
@@ -69,12 +86,19 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
     } : undefined,
   };
 
+  const isVisual = page.editor_mode === 'visual' && (page.html_body || '').trim().length > 0;
+  const hydratedBlocks: AnyBlock[] = isVisual ? [] : page.blocks.map(b => ({
+    ...b,
+    props: substituteDeep(b.props || {}, tokens),
+  }) as AnyBlock);
+
   const autoSchema = buildJsonLd(site, page, host, `/${slug}`);
   const pageSchema = page.schema || null;
   const schemas = [autoSchema, pageSchema].filter(Boolean);
 
   return (
     <div lang={site.lang || 'en'} style={themeStyle(site.theme)}>
+      <ThemeHeadCss site={site} />
       <CustomHeadCss site={site} />
       {schemas.map((s, i) => (
         <script
@@ -85,11 +109,19 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
       ))}
       <CustomBodyStart site={site} />
       <SiteHeader site={siteWithTokens as any} />
-      <main style={{ background: 'var(--bg)', color: 'var(--text)' }}>
-        <BlockRenderer blocks={hydratedBlocks} />
-      </main>
+      {isVisual ? (
+        <VisualPage
+          html={substituteString(page.html_body || '', tokens)}
+          css={page.css_body || ''}
+        />
+      ) : (
+        <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
+          <BlockRenderer blocks={hydratedBlocks} />
+        </main>
+      )}
       <SiteFooter site={siteWithTokens as any} />
       <SiteScripts site={site} />
+      <ThemeBodyEnd site={site} />
       <CustomBodyEnd site={site} />
     </div>
   );

@@ -321,6 +321,10 @@ export interface CustomHTMLBlock {
     type: 'custom_html';
     props: {
         html: string;
+        css?: string;
+        js?: string;
+        wrapper_class?: string;
+        full_width?: boolean;
     };
 }
 
