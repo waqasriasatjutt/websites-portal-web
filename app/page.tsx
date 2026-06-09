@@ -113,7 +113,7 @@ export default async function HomePage() {
         />
       ))}
       <CustomBodyStart site={site} />
-      <SiteHeader site={siteWithTokens as any} />
+      {!isVisual && <SiteHeader site={siteWithTokens as any} />}
       {isVisual ? (
         <main style={{ background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--font-body)' }}>
           {page.css_body && <style dangerouslySetInnerHTML={{ __html: page.css_body }} data-source="visual-page-css" />}
@@ -124,7 +124,7 @@ export default async function HomePage() {
           <BlockRenderer blocks={hydratedBlocks} />
         </main>
       )}
-      <SiteFooter site={siteWithTokens as any} />
+      {!isVisual && <SiteFooter site={siteWithTokens as any} />}
       <SiteScripts site={site} />
       <ThemeBodyEnd site={site} />
       <CustomBodyEnd site={site} />
