@@ -49,8 +49,9 @@ function VisualPage({ html, css }: { html: string; css: string }) {
   );
 }
 
-export default async function DynamicPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default async function DynamicPage({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug: slugParts } = await params;
+  const slug = Array.isArray(slugParts) ? slugParts.join('/') : (slugParts || '');
   const host = await resolveHost();
   const data = await getPage(host, { slug });
   if (!data) notFound();
@@ -127,8 +128,9 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
   );
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug: slugParts } = await params;
+  const slug = Array.isArray(slugParts) ? slugParts.join('/') : (slugParts || '');
   const host = await resolveHost();
   const data = await getPage(host, { slug });
   if (!data) return { title: 'Page not found' };
