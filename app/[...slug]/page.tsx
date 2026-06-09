@@ -109,7 +109,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
         />
       ))}
       <CustomBodyStart site={site} />
-      <SiteHeader site={siteWithTokens as any} />
+      {!isVisual && <SiteHeader site={siteWithTokens as any} />}
       {isVisual ? (
         <VisualPage
           html={substituteString(page.html_body || '', tokens)}
@@ -120,7 +120,7 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
           <BlockRenderer blocks={hydratedBlocks} />
         </main>
       )}
-      <SiteFooter site={siteWithTokens as any} />
+      {!isVisual && <SiteFooter site={siteWithTokens as any} />}
       <SiteScripts site={site} />
       <ThemeBodyEnd site={site} />
       <CustomBodyEnd site={site} />
