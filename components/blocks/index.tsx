@@ -32,6 +32,7 @@ import Team from './Team';
 import Code from './Code';
 import CustomHTML from './CustomHTML';
 import ReactWidget from './ReactWidget';
+import PluginIframe from './PluginIframe';
 import Unknown from './Unknown';
 
 import { buildCommunityRegistry } from '@/community/blocks';
@@ -60,6 +61,8 @@ const CORE_REGISTRY: Record<string, AnyComponent> = {
     code: Code,
     custom_html: CustomHTML,
     react_widget: ReactWidget,
+    plugin_iframe: PluginIframe,
+    plugin: PluginIframe,  // alias
 };
 
 // Community blocks override core if slug collision (intentional — let

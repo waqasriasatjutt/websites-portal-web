@@ -25,19 +25,22 @@ export async function POST(req: Request) {
   const page_slug = body.page_slug || '';
 
   try {
+    const flat: Record<string, any> = {
+      kind: 'contact',
+      host,
+      _url: body._url || '',
+      _source: host,
+      page_slug,
+      ...(fields || {}),
+    };
     const r = await fetch(`${ODOO_URL}/wp/api/forms/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'call',
-        params: { host, kind: 'contact', fields, page_slug },
-      }),
+      body: JSON.stringify(flat),
       cache: 'no-store',
     });
     const data = await r.json();
-    if (data?.error) return Response.json({ ok: false, error: 'odoo_error' }, { status: 502 });
-    return Response.json(data?.result || { ok: false, error: 'no_result' });
+    return Response.json(data);
   } catch (e: any) {
     return Response.json({ ok: false, error: 'proxy_error', detail: String(e?.message || e) }, { status: 502 });
   }
