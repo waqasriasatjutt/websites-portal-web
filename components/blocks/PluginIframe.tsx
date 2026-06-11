@@ -91,7 +91,7 @@ function SandboxedIframe({ plugin, block, bundle_url, mount_export, props = {}, 
     mount: mount_export || 'default',
     props: JSON.stringify(props || {}),
   });
-  const src = `/_plugin/${encodeURIComponent(plugin)}/${encodeURIComponent(block)}?${qs.toString()}`;
+  const src = `/plugin/${encodeURIComponent(plugin)}/${encodeURIComponent(block)}?${qs.toString()}`;
   return (
     <iframe
       src={src}
