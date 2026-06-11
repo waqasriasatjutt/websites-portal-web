@@ -146,11 +146,11 @@ async function fetchOdoo<T>(path: string, params: Record<string, string>): Promi
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
   try {
-    // NOTE: `next: { revalidate }` is unreliable on Cloudflare Workers edge
-    // with @cloudflare/next-on-pages. Use standard `cache: 'default'` so
-    // Cloudflare's edge cache honours the backend's `s-maxage` headers (the Odoo
-    // controller already sends `s-maxage=10, stale-while-revalidate=30`).
-    const res = await fetch(url, { cache: 'default', signal: controller.signal });
+    // NOTE: `cache: 'default'` interacts poorly with the @cloudflare/next-on-pages
+    // edge runtime — observed all `[...slug]` routes returning 404 when the
+    // backend's cache headers vary the response. Stay on `no-store` until that
+    // is understood. The AbortSignal still protects us from slow backends.
+    const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
     if (!res.ok) return null;
     const data: any = await res.json();
     if (!data.ok) return null;
