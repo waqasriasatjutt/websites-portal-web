@@ -28,8 +28,31 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ plugin: str
   let propsObj: any = {};
   try { propsObj = JSON.parse(url.searchParams.get('props') || '{}'); } catch {}
 
-  if (!bundle.startsWith('https://') && !bundle.startsWith('http://')) {
+  // Allow-list of trusted plugin bundle origins. Keeps SSRF + drive-by malicious
+  // bundle injection from happening if an attacker manages to spoof a manifest.
+  const ALLOWED_ORIGINS = [
+    'https://cdn.jsdelivr.net',
+    'https://unpkg.com',
+    'https://cdn.skypack.dev',
+    'https://esm.sh',
+  ];
+  let bundleUrl: URL;
+  try {
+    bundleUrl = new URL(bundle);
+  } catch {
     return new Response('Invalid bundle URL', { status: 400 });
+  }
+  if (bundleUrl.protocol !== 'https:') {
+    return new Response('Bundle must be served over HTTPS', { status: 400 });
+  }
+  const originAllowed =
+    ALLOWED_ORIGINS.includes(bundleUrl.origin) ||
+    bundleUrl.hostname.endsWith('.pages.dev') ||
+    bundleUrl.hostname.endsWith('.way4tech.com') ||
+    bundleUrl.hostname === 'cynxsolutions.com' ||
+    bundleUrl.hostname.endsWith('.cynxsolutions.com');
+  if (!originAllowed) {
+    return new Response(`Bundle origin not allowed: ${bundleUrl.origin}`, { status: 400 });
   }
 
   const html = `<!doctype html>
@@ -83,9 +106,25 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ plugin: str
       var root = ReactDOM.createRoot ? ReactDOM.createRoot(mount) : null;
       var el = React.createElement(Comp, props);
       if (root) { root.render(el); } else { ReactDOM.render(el, mount); }
+      reportHeight();
     } catch (e) {
       showError(e.message || String(e));
     }
+  }
+  // Tell the parent how tall to make the iframe — once on mount, then on any
+  // ResizeObserver change to the body.
+  function reportHeight() {
+    function emit() {
+      if (!window.parent) return;
+      var h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, 120);
+      try { window.parent.postMessage({ type: 'plugin:resize', height: h }, '*'); } catch (_) {}
+    }
+    emit();
+    if (typeof ResizeObserver !== 'undefined') {
+      try { new ResizeObserver(emit).observe(document.body); } catch (_) {}
+    }
+    setTimeout(emit, 200);
+    setTimeout(emit, 800);
   }
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     setTimeout(boot, 80);
@@ -102,8 +141,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ plugin: str
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=60, s-maxage=300',
-      // Allow embedding in parent pages on any portal site
-      'Content-Security-Policy': "frame-ancestors *;",
+      // Allow embedding only from portal-managed parent origins.
+      'Content-Security-Policy':
+        "frame-ancestors 'self' https://*.way4tech.com https://*.pages.dev https://cynxsolutions.com https://*.cynxsolutions.com;",
     },
   });
 }

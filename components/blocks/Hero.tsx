@@ -12,6 +12,7 @@ export default function Hero({ props }: { props: PropsOf<'hero'> }) {
             {props.cover_image && (
                 <div className="absolute inset-0 pointer-events-none">
                     <img src={props.cover_image} alt=""
+                         aria-hidden="true"
                          className="w-full h-full object-cover opacity-25" />
                     <div className="absolute inset-0"
                          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--bg) 90%)' }}></div>

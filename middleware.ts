@@ -44,13 +44,32 @@ export async function middleware(req: NextRequest) {
 
   // ── 301 redirects (slug-rename hook) ───────────────────────────
   // Only check for paths that look like content (not API/static).
+  // Detects redirect chains/loops up to MAX_HOPS and short-circuits at the final hop.
   if (host && !path.startsWith('/api/') && !path.startsWith('/_next/') && !path.startsWith('/widgets/')) {
     const rules = await fetchRedirects(host);
     if (rules.length > 0) {
-      const hit = rules.find(r => r.from === path);
-      if (hit) {
-        const target = hit.to.startsWith('http') ? hit.to : new URL(hit.to, req.nextUrl).toString();
-        return NextResponse.redirect(target, hit.code === 302 ? 302 : 301);
+      const ruleByFrom = new Map<string, RedirectRule>();
+      for (const r of rules) ruleByFrom.set(r.from, r);
+
+      const MAX_HOPS = 5;
+      const visited = new Set<string>();
+      let cursor = path;
+      let lastCode: number | null = null;
+      for (let i = 0; i < MAX_HOPS; i++) {
+        const hit = ruleByFrom.get(cursor);
+        if (!hit) break;
+        if (hit.to === hit.from || visited.has(hit.to)) {
+          // Self-redirect or cycle — stop chasing.
+          break;
+        }
+        visited.add(cursor);
+        cursor = hit.to;
+        lastCode = hit.code;
+      }
+
+      if (cursor !== path && lastCode !== null) {
+        const target = cursor.startsWith('http') ? cursor : new URL(cursor, req.nextUrl).toString();
+        return NextResponse.redirect(target, lastCode === 302 ? 302 : 301);
       }
     }
   }

@@ -34,6 +34,7 @@ import CustomHTML from './CustomHTML';
 import ReactWidget from './ReactWidget';
 import PluginIframe from './PluginIframe';
 import Unknown from './Unknown';
+import { BlockErrorBoundary } from '../ErrorBoundary';
 
 import { buildCommunityRegistry } from '@/community/blocks';
 
@@ -78,7 +79,11 @@ export default function BlockRenderer({ blocks }: { blocks: AnyBlock[] }) {
             {blocks.map(b => {
                 const Comp = REGISTRY[b.type as string];
                 if (!Comp) return <Unknown key={b.id} type={b.type} />;
-                return <Comp key={b.id} props={(b as any).props} />;
+                return (
+                    <BlockErrorBoundary key={b.id} label={b.type as string}>
+                        <Comp props={(b as any).props} />
+                    </BlockErrorBoundary>
+                );
             })}
         </>
     );

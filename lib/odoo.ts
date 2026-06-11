@@ -142,18 +142,28 @@ export interface PostSummary {
 async function fetchOdoo<T>(path: string, params: Record<string, string>): Promise<T | null> {
   const qs = new URLSearchParams(params).toString();
   const url = `${ODOO_URL}${path}?${qs}`;
+  // Abort after 10s so an unhealthy backend doesn't keep an edge worker pinned.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
   try {
     // NOTE: `next: { revalidate }` is unreliable on Cloudflare Workers edge
-    // with @cloudflare/next-on-pages. Use standard cache headers + CF's own
-    // cache layer instead (the Odoo controller already sends s-maxage=300).
-    const res = await fetch(url, { cache: 'no-store' });
+    // with @cloudflare/next-on-pages. Use standard `cache: 'default'` so
+    // Cloudflare's edge cache honours the backend's `s-maxage` headers (the Odoo
+    // controller already sends `s-maxage=10, stale-while-revalidate=30`).
+    const res = await fetch(url, { cache: 'default', signal: controller.signal });
     if (!res.ok) return null;
     const data: any = await res.json();
     if (!data.ok) return null;
     return data as T;
-  } catch (err) {
-    console.warn('[odoo]', path, err);
+  } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      console.warn('[odoo] timeout', path);
+    } else {
+      console.warn('[odoo]', path, err);
+    }
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

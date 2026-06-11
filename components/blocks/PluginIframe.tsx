@@ -85,6 +85,28 @@ function TrustedInline({ bundle_url, mount_export = 'default', props = {} }: Plu
 }
 
 function SandboxedIframe({ plugin, block, bundle_url, mount_export, props = {}, height = 600 }: PluginIframeProps) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [autoHeight, setAutoHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!iframeRef.current) return;
+    const expectedSrc = iframeRef.current.src;
+    function onMsg(e: MessageEvent) {
+      // Plugin pages opt in by posting { type: 'plugin:resize', height: number }
+      const d = e.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.type !== 'plugin:resize' || typeof d.height !== 'number') return;
+      // Sanity bounds.
+      const next = Math.max(120, Math.min(8000, Math.round(d.height)));
+      setAutoHeight(next);
+      // (No origin check — sandboxed iframe origin is 'null', which the browser
+      //  surfaces in `e.origin`. We only act on the shape of the payload.)
+      void expectedSrc;
+    }
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
   if (!plugin || !block || !bundle_url) return null;
   const qs = new URLSearchParams({
     bundle: bundle_url,
@@ -94,6 +116,7 @@ function SandboxedIframe({ plugin, block, bundle_url, mount_export, props = {}, 
   const src = `/plugin/${encodeURIComponent(plugin)}/${encodeURIComponent(block)}?${qs.toString()}`;
   return (
     <iframe
+      ref={iframeRef}
       src={src}
       sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
       title={`${plugin}:${block}`}
@@ -101,7 +124,8 @@ function SandboxedIframe({ plugin, block, bundle_url, mount_export, props = {}, 
         width: '100%',
         border: 0,
         display: 'block',
-        height: `${height}px`,
+        height: `${autoHeight ?? height}px`,
+        transition: 'height .15s ease',
       }}
     />
   );

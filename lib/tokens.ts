@@ -25,10 +25,21 @@ function withBuiltIns(tokens: Tokens): Record<string, string> {
     return out;
 }
 
+/** Escape HTML special chars so a token value with `<script>` doesn't become an XSS sink
+ *  when the result is fed to dangerouslySetInnerHTML by callers. */
+function escapeHtml(s: string): string {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 export function substituteString(s: string, tokens: Record<string, string>): string {
     if (!s || typeof s !== 'string') return s;
     return s.replace(TOKEN_RE, (_m, key) => {
-        if (key in tokens) return tokens[key];
+        if (key in tokens) return escapeHtml(tokens[key]);
         return `{{${key}}}`; // leave as-is when token missing
     });
 }
