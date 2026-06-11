@@ -1,0 +1,40 @@
+{
+  "name": "Odoo Lead Connector",
+  "slug": "odoo-lead-connector",
+  "version": "1.0.0",
+  "kind": "blocks",
+  "icon": "🔗",
+  "category": "conversion",
+  "author": "Waqas Riasat",
+  "description": "Drop a contact form on any site — submissions create a crm.lead on a target Odoo instance you choose per-block. Perfect for selling 'plug & play CRM forms' across many tenant sites.",
+  "homepage_url": "https://github.com/waqasriasatjutt/odoo-lead-connector",
+  "blocks": [
+    {
+      "slug": "olc-contact-form",
+      "name": "Odoo Lead Form",
+      "icon": "📨",
+      "category": "Conversion",
+      "description": "Configurable contact form whose submissions are forwarded to a target Odoo's /wp/api/forms/submit endpoint. The target Odoo's URL, db login, sales team and lead source are configured per-block in the editor.",
+      "bundle": "https://new.way4tech.com/plugins/odoo-lead-connector/dist/contact-form.umd.js",
+      "mount_export": "OlcContactForm",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "heading":           { "type": "string", "title": "Heading",          "default": "Get in touch" },
+          "subheading":        { "type": "string", "title": "Subheading",       "default": "We respond within 4 hours." },
+          "submit_label":      { "type": "string", "title": "Submit button",    "default": "Send message" },
+          "success_message":   { "type": "string", "title": "Success message",  "default": "Thanks! We'll get back to you soon." },
+          "error_message":     { "type": "string", "title": "Error message",    "default": "Could not send right now — please try email." },
+          "odoo_url":          { "type": "string", "title": "Target Odoo URL (no trailing slash)", "default": "https://portal.way4tech.com" },
+          "odoo_host":         { "type": "string", "title": "Target site host (for routing on the Odoo end)", "default": "" },
+          "odoo_team_id":      { "type": "integer","title": "Target sales team id (optional)" },
+          "odoo_user_id":      { "type": "integer","title": "Target salesperson id (optional)" },
+          "odoo_source_tag":   { "type": "string", "title": "Lead source tag",  "default": "odoo-lead-connector" },
+          "fields_json":       { "type": "string", "title": "Form fields (JSON array)", "default": "[{\"key\":\"name\",\"label\":\"Name\",\"type\":\"text\",\"required\":true},{\"key\":\"email\",\"label\":\"Email\",\"type\":\"email\",\"required\":true},{\"key\":\"phone\",\"label\":\"Phone\",\"type\":\"tel\"},{\"key\":\"message\",\"label\":\"Message\",\"type\":\"textarea\",\"required\":true}]" },
+          "accent_color":      { "type": "string", "title": "Accent color",     "default": "#0EA5E9" }
+        },
+        "required": ["odoo_url"]
+      }
+    }
+  ]
+}
